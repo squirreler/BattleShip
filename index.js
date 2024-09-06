@@ -1,3 +1,153 @@
+//On mouse down
+// set draggedItem ship
+// set dragged true
+// setx trans and y trans to zero
+//Add x and y trans to the css class
+//On pointer move context window
+// remove x and y trans from css classes
+// move the ship by incremeting x and y trans by the cursors event.movement values and changing the x and y trans css classes to the new trans values
+//on mouse down set all variables to null, remove x and y trans classes
+
+
+
+
+//Create eventlistener in ship class
+//set create and append to field
+
+//Your priority is to build out corrdinate system tracking.
+let draggedItem = null;
+class ship {
+    length;   // 2-5
+    rotation; // - |
+    health; // [o, o, x, o, x]
+    location;
+
+    dragging;
+    xTrans; 
+    yTrans;
+    html;
+
+    static styleList = ["flex", "rounded-full"];//Does not include color or length. 
+    // full styleList [display, rounded, color, width, height]
+    constructor(shipName, length, rotation, color) {
+        this.length = length;
+        this.rotation = rotation;
+        this.color = color;
+        this.health = () => {
+            let healthArray = [];
+            for (let i = 0; i < this.length;i++) {this.health.push("o");};
+            return healthArray;
+        };
+        this.location = () => {
+            let locationArray = [];
+            for (let i = 0; i < this.length;i++) {this.location.push(null);};
+            return locationArray;
+        };
+
+        this.dragging = false;
+        this.xTrans = null;
+        this.yTrans = null;
+        this.html = createAndAppendChildElement(shipSelectionScreen, "div", shipName, ship.styleList);
+
+        this.html.classList.add(color);
+        this.html.classList.add(this.calculateHTMLWidth(), this.calculateHTMLLength());
+        console.log(this.location);
+        console.log(this.health);
+        this.addEventListeners();
+        
+    }
+    placeToGrid(x, y, rotation) {
+        this.topXCoord = x;
+        this.topYCoord = y;
+        this.rotation = rotation;
+    }
+    calculateHTMLWidth() {
+        if (this.rotation === "-") {
+            return `w-[${this.length * 50}px]`;
+        } else {
+            return "w-[50px]";
+        }
+    }
+    calculateHTMLLength() {
+        if (this.rotation === "|") {
+            return `h-[${this.length * 50}px]`;
+        } else {
+            return "h-[50px]";
+        }
+    }
+    get middleXCoordInPx() {
+        return this.html.getBoundingClientRect().x + 25;
+    }
+    get middleYCoordInPx() {
+        // return this.html.getBoundingClientRect().y - 25 - (50 * (length - 1));
+        return this.html.getBoundingClientRect().y;
+    }
+    get firstSquareXCoordInPx() {
+        return this.html.getBoundingClientRect().x + 25;
+    }
+    get firstSquareYCoordInPx() {
+        return this.html.getBoundingClientRect().y - 25;
+    }
+    
+    get isDestroyed() {
+        let isDestroyed = true;
+        for (sectionStatus of health) {
+            if (sectionStatus === "o") {
+                return false;
+            }
+        }
+        return this.isDestroyed;
+    }
+    // set health() {
+    //     return this.health;            //Need to work more on placing ships before I can confidently draw up the structure of this class. 
+    // }
+    // [o, o, o, x]
+    //isDead
+    //etc
+    addEventListeners() {
+        this.html.addEventListener("mousedown", (event) => { //use window.x when you use this for ship //make ship.style.display false; trhough minipulating classelist when drag start
+            draggedItem = this;
+            let draggedItemHtml = this.html;
+            draggedItemHtml.classList.remove(...draggedItemHtml.classList);
+            draggedItemHtml.classList.add("fixed", "rounded-full", draggedItem.color, this.calculateHTMLWidth(), this.calculateHTMLLength());
+            draggedItem.dragging = true;
+
+             // Here so it can be easily removed in the window event listener
+            if (draggedItem.xTrans === null || draggedItem.yTrans === null) {
+                let snapX = shipSelectionScreen.getBoundingClientRect().x + (shipSelectionScreen.getBoundingClientRect().right - shipSelectionScreen.getBoundingClientRect().x) / 2;
+                let snapY = shipSelectionScreen.getBoundingClientRect().y + (shipSelectionScreen.getBoundingClientRect().bottom - shipSelectionScreen.getBoundingClientRect().y) / 2;
+                draggedItem.xTrans = event.x - snapX; 
+                draggedItem.yTrans = event.y - snapY;
+                
+            }
+            // console.log(draggedItem.xTrans);
+            draggedItemHtml.classList.add(`translate-x-[${draggedItem.xTrans}px]`);
+            draggedItemHtml.classList.add(`translate-y-[${draggedItem.yTrans}px]`);
+        });
+
+        this.html.addEventListener("mouseup", (event) => {
+            //if can snap into box, set ship coords to box coords with offset if needed
+            //Else mov it back to where it was initially by giving its old classes back
+            console.log("----------");
+            console.log(event.x);
+                console.log(event.y);
+                console.log(this.html.getBoundingClientRect().x);
+                console.log(this.html.getBoundingClientRect().y);
+            if (false) {
+                
+            } else {
+                draggedItem.html.classList.remove(...draggedItem.html.classList);
+                draggedItem.html.classList.add(...ship.styleList);
+                draggedItem.html.classList.add(this.calculateHTMLWidth(), this.calculateHTMLLength(), this.color);
+                draggedItem.xTrans = null;
+                draggedItem.yTrans = null;
+            }
+            draggedItem.dragging = false;
+            draggedItem = null;
+        });
+    }
+}
+
 function createAndAppendChildElement(parent, elementString, id, styleList) {
     let element = document.createElement(elementString);
     element.id = id;
@@ -54,7 +204,6 @@ function createButtonAndEventListener(parent, name, id, styleList, backgroundCol
 }
 
 
-
 // let playerScreen = document.getElementById("player-screen");
 let gameScreenSection = document.getElementById("game-screens");
 const gameScreenSectionStyleList = ["flex", "flex-col", "nowrap", "items-center"];
@@ -84,7 +233,7 @@ let shipSelectionSectionGroupingStyleList = ["flex", "flex-row", "gap-x-5"];
 
 
 let shipSelectionScreen = null;
-const shipSelectionSectionStyleList = ["flex", "flex-row", "justify-center", "items-center","py-4", "w-[550px]", "h-[230px]", "min-w-[300px]", "bg-cyan-200", "outline", "outline-4", "outline-cyan-600", "rounded-lg"]
+const shipSelectionSectionStyleList = ["flex", "flex-row", "justify-center", "items-center","gap-x-4", "py-4", "w-[500px]", "h-[270px]", "min-w-[300px]", "bg-cyan-200", "outline", "outline-4", "outline-cyan-600", "rounded-lg"]
 
 let shipSelectionButtonDiv = null;
 const shipSelectionButtonDivStyleList = ["flex", "flex-col", "justify-center", "items-center", "px-4", "my-1", "py-3", "bg-cyan-200", "rounded-lg"];
@@ -126,64 +275,37 @@ shipSelectionScreen = createAndAppendChildElement(shipSelectionSectionGrouping, 
 shipSelectionButtonDiv = createAndAppendChildElement(shipSelectionSectionGrouping, "div", "ship-selection-buttons",shipSelectionButtonDivStyleList);
 
 //Tune colors later
-rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "rotate-button", shipSelectionButtonStyleList, "bg-red-500", () => {console.log("Button Clicked")});
-rotateButton.draggable = true;
-console.dir(rotateButton);
-startButton = createButtonAndEventListener(shipSelectionButtonDiv, "submit", "submit-button", shipSelectionButtonStyleList, "bg-blue-500", () => {console.log("Button Clicked")});
+rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "rotate-button", shipSelectionButtonStyleList, "bg-red-500", () => {
 
-
-rotateButton.addEventListener("mouseUp", (event) => { //use window.x when you use this for ship //make ship.style.display false; trhough minipulating classelist when drag start
-    console.log(event);
-    rotateButton.classList.add("hidden"); // Drag and drop api is overkill for my uses, just use event listeners to make the thing draggable. 
 });
 
-//Your priority is to build out corrdinate system tracking.
-class ship {
-    length;   // 2-5
-    rotation; // - |
-    health; // [o, o, x, o, x]
-    topXCoord;
-    topYCoord;
-    constructor(length, rotation, color) {
-        this.length = length;
-        this.rotation = rotation;
-        this.color = color;
-        this.topXCoord = null;
-        this.topYCOord = null;
-        this.health = () => {
-            let healthArray = [];
-            for (let i = 0; i < this.length;i++) {this.health.push("o");};
-            return healthArray;
-        };
-        console.log(this.health);
-        
+startButton = createButtonAndEventListener(shipSelectionButtonDiv, "submit", "submit-button", shipSelectionButtonStyleList, "bg-blue-500", () => {console.log("Button Clicked")});
 
+document.addEventListener("pointermove", (event) => {
+    
+    if (draggedItem !== null && draggedItem.dragging === true) {
+        let draggedItemHtml = draggedItem.html;
+        // console.log(dragging);
+        // console.log(event);
+        // console.log("pointer is moving")
+        if (event.movementX !== 0) {
+            // console.log(event.movementX);
+        } 
+        draggedItemHtml.classList.remove(`translate-x-[${draggedItem.xTrans}px]`);
+        draggedItemHtml.classList.remove(`translate-y-[${draggedItem.yTrans}px]`);
+        draggedItem.xTrans += event.movementX;
+        draggedItem.yTrans += event.movementY;
+        draggedItemHtml.classList.add(`translate-x-[${draggedItem.xTrans}px]`);
+        draggedItemHtml.classList.add(`translate-y-[${draggedItem.yTrans}px]`);
     }
-    placeToGrid(x, y, rotation) {
-        this.topXCoord = x;
-        this.topYCoord = y;
-        this.rotation = rotation;
-    }
-    render() {
-        
-    }
-    get isDestroyed() {
-        let isDestroyed = true;
-        for (sectionStatus of health) {
-            if (sectionStatus === "o") {
-                return false;
-            }
-        }
-        return this.isDestroyed;
-    }
-    // set health() {
-    //     return this.health;            //Need to work more on placing ships before I can confidently draw up the structure of this class. 
-    // }
-    // [o, o, o, x]
-    //isDead
-    //etc
+})
 
-}
+
+let carrier = new ship("carrier", 5, "|", "bg-blue-900");
+let battleShip = new ship("battleship", 4, "|", "bg-stone-500");
+let submarine = new ship("submarine", 3,"|", "bg-rose-900");
+let patrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900");
+//Carrier BattleShip Sumbarine, patrol boat
 
 // let screen = document.createElement("div");
 // gameScreenSection.appendChild(screen)
