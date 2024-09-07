@@ -13,12 +13,16 @@
 
 //Create eventlistener in ship class
 //set create and append to field
+function logVar(name, variable) {
+    console.log(name + ": " + variable); // Output: "myFirstName"
 
+}
 //Your priority is to build out corrdinate system tracking.
 let draggedItem = null;
 class ship {
     length;   // 2-5
     rotation; // - |
+    placementLock;
     health; // [o, o, x, o, x]
     location;
 
@@ -32,6 +36,7 @@ class ship {
     constructor(shipName, length, rotation, color) {
         this.length = length;
         this.rotation = rotation;
+        this.placementLock = false;
         this.color = color;
         this.health = () => {
             let healthArray = [];
@@ -53,11 +58,15 @@ class ship {
         this.html.classList.add(color);
         this.html.classList.add(this.calculateHTMLWidth(), this.calculateHTMLLength());
         console.log(this.location);
+        logVar("locationvar: ", this.location);
         console.log(this.health);
         this.addEventListeners();
         
     }
     rotate() {
+        if (this.placementLock) {
+            return;
+        }
         this.html.classList.remove(this.calculateHTMLWidth());
         this.html.classList.remove(this.calculateHTMLLength());
         this.rotation === "-" ? this.rotation = "|" : this.rotation = "-";
@@ -123,6 +132,7 @@ class ship {
         this.html.addEventListener("mousedown", (event) => { //use window.x when you use this for ship //make ship.style.display false; trhough minipulating classelist when drag start
             draggedItem = this;
             console.log(draggedItem.html)
+            logVar("draggedItem.html", draggedItem.html);
             let draggedItemHtml = this.html;
             draggedItemHtml.classList.remove(...draggedItemHtml.classList);
             draggedItemHtml.classList.add("fixed", "rounded-full", draggedItem.color, this.calculateHTMLWidth(), this.calculateHTMLLength());
@@ -173,8 +183,38 @@ class ship {
                 console.log(this.html.getBoundingClientRect().x);
                 console.log(this.html.getBoundingClientRect().y);
                 console.log(event)
-            if (xyCoordIsIn(playerScreen, event.clientX, event.clientY) && shipFits(playerScreen, draggedItem)) {
-                
+                let doesTheShipFit = shipFits(playerScreen, draggedItem);
+                console.log(shipFits(playerScreen, draggedItem));
+                console.log("does the ship fit: " + doesTheShipFit.x + " | " + doesTheShipFit.y + " | " + doesTheShipFit.calc);
+            if (doesTheShipFit != false) {
+                draggedItem.placementLock = true;
+                console.log("calculateShipCoordsFromTopCoords: " + calculateShipCoordsFromTopCoords(draggedItem.middleXCoordInPx, draggedItem.middleYCoordInPx, draggedItem));
+                draggedItem.location = doesTheShipFit.calc;
+                console.log("Dragged ITem Location: " + draggedItem.location);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             } else {
                 draggedItem.html.classList.remove(...draggedItem.html.classList);
                 draggedItem.html.classList.add(...this.styleList);
@@ -256,12 +296,55 @@ function xyCoordIsIn(parent, x, y) {
     let parentTopY = parent.getBoundingClientRect().y;
     let parentRightX = parent.getBoundingClientRect().right;
     let parentBottomX = parent.getBoundingClientRect().bottom;
+console.log(parent.getBoundingClientRect().x);
+console.log(parent.getBoundingClientRect().y);
+console.log(parent.getBoundingClientRect().right);
+console.log(parent.getBoundingClientRect().bottom);
     if (x > parentTopX && x < parentRightX && y > parentTopY && y < parentBottomX) {
         return true;
     }
     return false;
 }
-function shipFits(playerScreen, draggedItem) {
+function calculateShipCoordsFromTopCoords(topX, topY, ship) {
+    let shipCoordsList = [];
+    let incrementCoord = 0;
+    let staticCoord = 0; 
+    console.log(ship.rotation);
+    let coordGrid = 0;
+    let refreshCoordGrid = 0; 
+    
+    if (ship.rotation === "|") {
+        incrementCoord = topY;
+        staticCoord = topX;
+        refreshCoordGrid = (incrementCoord, staticCoord) => {
+            return `${staticCoord}-${incrementCoord}`
+        }
+    } else {
+        incrementCoord = topX;
+        staticCoord = topY;
+        refreshCoordGrid = (incrementCoord, staticCoord) => {
+            return `${incrementCoord}-${staticCoord}`
+        }
+    }
+
+    if (incrementCoord < 0 || topX > 9 || topY > 9 || incrementCoord > 9 || topX < 0 || topY < 0) { //Perfect code...
+        return false;
+    }
+    for (let i = 0; i < ship.length; i++) {
+        shipCoordsList.push(refreshCoordGrid(incrementCoord, staticCoord));
+        incrementCoord++;
+        console.log("incrementCoord: " + incrementCoord);
+        if (incrementCoord > 9 && (i + 1) !== ship.length) {
+            console.log("returning false");
+            return false;
+        }
+    }
+    console.log(shipCoordsList);
+    return shipCoordsList;
+    
+    //Return array of coords if fits, fals otherwisse
+}
+function shipFits(playerScreen, draggedShip) {
     //Assumes dragged item is in playerscreen due to the previous check
     let screenTopX = playerScreen.getBoundingClientRect().x;
     let screenTopY = playerScreen.getBoundingClientRect().y;
@@ -269,26 +352,49 @@ function shipFits(playerScreen, draggedItem) {
     // let screenBottomX = playerScreen.getBoundingClientRect().bottom;
 
     // let draggedItemTopX = draggedItem.html.getBoundingClientRect().x;
-    let draggedItemTopY = draggedItem.html.getBoundingClientRect().y;
+    let draggedShipTopY = draggedShip.html.getBoundingClientRect().y;
     // let draggedItemRightX = draggedItem.html.getBoundingClientRect().right;
     // let draggedItemBottomX = draggedItem.html.getBoundingClientRect().bottom;
 
-    let draggedItemStartGridX = draggedItem.firstSquareXCoordInPx;
-    let draggedItemStartGridY = draggedItem.firstSquareYCoordInPx;
-    let gridDisplacementDistanceX = draggedItemStartGridX - screenTopX;
-    let gridDisplacementDistanceY = draggedItemStartGridY - screenTopY;
-
-    let topGridSquareX = Math.trunc(draggedItemStartGridX / 50);
-    let topGridSquareY = Math.trunc(draggedItemStartGridY / 50);
+    let draggedShipStartGridX = draggedShip.firstSquareXCoordInPx;
+    let draggedShipStartGridY = draggedShip.firstSquareYCoordInPx;
+    let gridDisplacementDistanceX = draggedShipStartGridX - screenTopX;
+    let gridDisplacementDistanceY = draggedShipStartGridY - screenTopY;
+    console.log("draggedShipStartGridX: " + draggedShipStartGridX);
+    console.log("draggedShipStartGridY: " + draggedShipStartGridY);
+    let topGridSquareX = Math.trunc(draggedShipStartGridX / 50) - 1;
+    let topGridSquareY = Math.trunc(draggedShipStartGridY / 50) - 1;
+    // console.log("The output of the calculateshipcoords is: " + calculateShipCoordsFromTopCoords(topGridSquareX, topGridSquareY, draggedShip));
+    let shipCoordCalc = calculateShipCoordsFromTopCoords(topGridSquareX, topGridSquareY, draggedShip);
+    console.log("shipCoordCalc: " + shipCoordCalc);
+    if (shipCoordCalc !== false) {return {x: topGridSquareX, y: topGridSquareY, calc: shipCoordCalc};} else {return false;}
     console.log("topGridSquareX: " + topGridSquareX);
     console.log("topGridSquareY: " + topGridSquareY);
     console.log("gridDisplacementDistanceX: " + gridDisplacementDistanceX);
     console.log("gridDisplacementDistanceY: " + gridDisplacementDistanceY);
     console.log("screenTopY: " + screenTopY);
-    console.log("draggedItemTopY: " + draggedItemTopY);
+    console.log("draggedItemTopY: " + draggedShipTopY);
+    
+}
+function shipsDontOverlap(shipList) {
+    let coordList = [];
+    for (let i = 0; i < shipList.length; i++) {
+        if (shipList[i].location[i] === null) {
+            alert('not all ships are placed');
+            return false;
+        }
+        coordList.push(...shipList[i].location);
+    }
+    for (let i = 0; i < coordList.length - 1; i++) {
+        coordList.sort();
+        if (coordList[i] === coordList[i - 1]) {
+            return false;
+        }
+    }
+    console.log(coordList);
+    return true;
 
 }
-
 
 
 
@@ -304,6 +410,9 @@ document.addEventListener("pointermove", (event) => {
         if (event.movementX !== 0) {
             // console.log(event.movementX);
         } 
+        if (draggedItem.placementLock) {
+            return;
+        }
         draggedItemHtml.classList.remove(`translate-x-[${draggedItem.xTrans}px]`);
         draggedItemHtml.classList.remove(`translate-y-[${draggedItem.yTrans}px]`);
         draggedItem.xTrans += event.movementX;
@@ -421,7 +530,10 @@ shipSelectionButtonDiv = createAndAppendChildElement(shipSelectionSectionGroupin
 
 
 
-
+function startGame() {
+    alert('Game started');
+    return 0;
+};
 
 
 
@@ -431,15 +543,28 @@ let playerCarrier = new ship("carrier", 5, "|", "bg-blue-900");
 let playerBattleShip = new ship("battleship", 4, "|", "bg-stone-500");
 let playerSubmarine = new ship("submarine", 3,"|", "bg-rose-900");
 let playerPatrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900");
-
 let playerShipList = [playerCarrier, playerBattleShip, playerSubmarine, playerPatrolBoat]
+
+function recreateShips() {
+    playerCarrier.html.remove();
+    playerBattleShip.html.remove();
+    playerSubmarine.html.remove();
+    playerPatrolBoat.html.remove();
+    playerCarrier = new ship("carrier", 5, "|", "bg-blue-900");
+    playerBattleShip = new ship("battleship", 4, "|", "bg-stone-500");
+    playerSubmarine = new ship("submarine", 3,"|", "bg-rose-900");
+    playerPatrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900");
+    playerShipList = [playerCarrier, playerBattleShip, playerSubmarine, playerPatrolBoat]
+}
+
+
 
 rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "rotate-button", shipSelectionButtonStyleList, "bg-red-500", () => {
     let shipSelectionScreenClassList = shipSelectionScreen.classList;
     if (shipSelectionScreenClassList.contains("flex-col") ) {
         shipSelectionScreenClassList.remove("flex-col");
         shipSelectionScreenClassList.add("flex-row");
-    } else {
+    } else if (shipSelectionScreenClassList.contains("flex-row")) {
         shipSelectionScreenClassList.remove("flex-row");
         shipSelectionScreenClassList.add("flex-col");
     }
@@ -448,7 +573,24 @@ rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "r
 
 
 
-startButton = createButtonAndEventListener(shipSelectionButtonDiv, "submit", "submit-button", shipSelectionButtonStyleList, "bg-blue-500", () => {console.log("Button Clicked")});
+startButton = createButtonAndEventListener(shipSelectionButtonDiv, "submit", "submit-button", shipSelectionButtonStyleList, "bg-blue-500", () => {
+    if (shipsDontOverlap(playerShipList)) {
+        startGame();
+    } else {
+        alert('Ships are overlapping');
+        recreateShips();
+        let shipSelectionScreenClassList = shipSelectionScreen.classList;
+        if (shipSelectionScreenClassList.contains("flex-col") ) {
+            shipSelectionScreenClassList.remove("flex-col");
+            shipSelectionScreenClassList.add("flex-row");
+        }
+    }
+});
+
+
+//Need to get snap to grid working
+
+
 // patrolBoat.rotate();
 
 // let computerCarrier = new ship("carrier", 5, "|", "bg-blue-900");
