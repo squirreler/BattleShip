@@ -101,7 +101,7 @@ class ship {
         return this.html.getBoundingClientRect().x + 25;
     }
     get firstSquareYCoordInPx() {
-        return this.html.getBoundingClientRect().y - 25;
+        return this.html.getBoundingClientRect().y + 25;
     }
     
     get isDestroyed() {
@@ -122,27 +122,41 @@ class ship {
     addEventListeners() {
         this.html.addEventListener("mousedown", (event) => { //use window.x when you use this for ship //make ship.style.display false; trhough minipulating classelist when drag start
             draggedItem = this;
+            console.log(draggedItem.html)
             let draggedItemHtml = this.html;
             draggedItemHtml.classList.remove(...draggedItemHtml.classList);
             draggedItemHtml.classList.add("fixed", "rounded-full", draggedItem.color, this.calculateHTMLWidth(), this.calculateHTMLLength());
             draggedItem.dragging = true;
-
+                let shipBoundingX = draggedItemHtml.getBoundingClientRect().x + (draggedItemHtml.getBoundingClientRect().right - draggedItemHtml.getBoundingClientRect().x) / 2;
+                let shipBoundingY = draggedItemHtml.getBoundingClientRect().y + (draggedItemHtml.getBoundingClientRect().bottom - draggedItemHtml.getBoundingClientRect().y) / 2;
+                console.log(shipBoundingX);
+                console.log(shipBoundingY);
              // Here so it can be easily removed in the window event listener
             if (draggedItem.xTrans === null || draggedItem.yTrans === null) {
+
+
                 let snapX = shipSelectionScreen.getBoundingClientRect().x + (shipSelectionScreen.getBoundingClientRect().right - shipSelectionScreen.getBoundingClientRect().x) / 2;
                 let snapY = shipSelectionScreen.getBoundingClientRect().y + (shipSelectionScreen.getBoundingClientRect().bottom - shipSelectionScreen.getBoundingClientRect().y) / 2;
-                draggedItem.xTrans = event.x - snapX; 
-                draggedItem.yTrans = event.y - snapY;
+                draggedItem.xTrans = event.clientX - snapX; 
+                draggedItem.yTrans = event.clientY - snapY;
+
+                console.log(event.target);
+                console.log(event);
+                //Would allow for it to work on mobile screen sizes but has been depreciated for more than 10 years and broken on webkit that tailwind uses
+                //It works on any ship for the first time them breaks for all furthers ships
+                // draggedItem.xTrans = event.layerX - snapX; 
+                // draggedItem.yTrans = snapY - event.layerY;
+
+
+
+
                 // console.log(event);
                 // console.log("snapX" + snapX);
                 // console.log("snapY" + snapY);
+                // console.log("eventX: " + event.layerX);
+                // console.log("eventY" + event.layerY);
                 // console.log(draggedItem.xTrans);
                 // console.log(draggedItem.yTrans);
-                //clientX
-                //page
-                //screen
-                //x
-                //Need to figure out why it does not work on mobile
                 
             }
             // console.log(draggedItem.xTrans);
@@ -158,7 +172,8 @@ class ship {
                 console.log(event.y);
                 console.log(this.html.getBoundingClientRect().x);
                 console.log(this.html.getBoundingClientRect().y);
-            if (false) {
+                console.log(event)
+            if (xyCoordIsIn(playerScreen, event.clientX, event.clientY) && shipFits(playerScreen, draggedItem)) {
                 
             } else {
                 draggedItem.html.classList.remove(...draggedItem.html.classList);
@@ -172,7 +187,10 @@ class ship {
         });
     }
 }
-
+window.addEventListener("click", (event) => {
+    console.log(event.clientX);
+    console.log(event.clientY);
+});
 function createAndAppendChildElement(parent, elementString, id, styleList) {
     let element = document.createElement(elementString);
     element.id = id;
@@ -212,6 +230,7 @@ function createScreen(parentDiv,outlineColor, id, styleList) {
     let screen = document.createElement("div");
     screen.classList.add(...styleList); // I love javascript
     screen.classList.add(outlineColor);
+    screen.id = id;
     parentDiv.appendChild(screen);
     return screen;
 }
@@ -231,6 +250,43 @@ function rotateAllShips(shipList) {
     for (let i = 0; i < shipList.length; i++) {
         shipList[i].rotate();
     }
+}
+function xyCoordIsIn(parent, x, y) {
+    let parentTopX = parent.getBoundingClientRect().x;
+    let parentTopY = parent.getBoundingClientRect().y;
+    let parentRightX = parent.getBoundingClientRect().right;
+    let parentBottomX = parent.getBoundingClientRect().bottom;
+    if (x > parentTopX && x < parentRightX && y > parentTopY && y < parentBottomX) {
+        return true;
+    }
+    return false;
+}
+function shipFits(playerScreen, draggedItem) {
+    //Assumes dragged item is in playerscreen due to the previous check
+    let screenTopX = playerScreen.getBoundingClientRect().x;
+    let screenTopY = playerScreen.getBoundingClientRect().y;
+    // let screenRightX = playerScreen.getBoundingClientRect().right;
+    // let screenBottomX = playerScreen.getBoundingClientRect().bottom;
+
+    // let draggedItemTopX = draggedItem.html.getBoundingClientRect().x;
+    let draggedItemTopY = draggedItem.html.getBoundingClientRect().y;
+    // let draggedItemRightX = draggedItem.html.getBoundingClientRect().right;
+    // let draggedItemBottomX = draggedItem.html.getBoundingClientRect().bottom;
+
+    let draggedItemStartGridX = draggedItem.firstSquareXCoordInPx;
+    let draggedItemStartGridY = draggedItem.firstSquareYCoordInPx;
+    let gridDisplacementDistanceX = draggedItemStartGridX - screenTopX;
+    let gridDisplacementDistanceY = draggedItemStartGridY - screenTopY;
+
+    let topGridSquareX = Math.trunc(draggedItemStartGridX / 50);
+    let topGridSquareY = Math.trunc(draggedItemStartGridY / 50);
+    console.log("topGridSquareX: " + topGridSquareX);
+    console.log("topGridSquareY: " + topGridSquareY);
+    console.log("gridDisplacementDistanceX: " + gridDisplacementDistanceX);
+    console.log("gridDisplacementDistanceY: " + gridDisplacementDistanceY);
+    console.log("screenTopY: " + screenTopY);
+    console.log("draggedItemTopY: " + draggedItemTopY);
+
 }
 
 
@@ -255,6 +311,7 @@ document.addEventListener("pointermove", (event) => {
         draggedItemHtml.classList.add(`translate-x-[${draggedItem.xTrans}px]`);
         draggedItemHtml.classList.add(`translate-y-[${draggedItem.yTrans}px]`);
     }
+
 })
 
 
@@ -316,7 +373,7 @@ let shipSelectionSectionGroupingStyleList = ["flex", "flex-row", "gap-x-5"];
 
 
 let shipSelectionScreen = null;
-const shipSelectionSectionStyleList = ["flex", "flex-row", "wrap", "justify-center", "items-center","gap-x-4", "py-4", "w-[500px]", "h-[270px]", "min-w-[300px]", "bg-cyan-200", "outline", "outline-4", "outline-cyan-600", "rounded-lg"]
+const shipSelectionSectionStyleList = ["flex", "flex-row", "wrap", "justify-center", "items-center","gap-x-4", "gap-y-2", "py-4", "w-[500px]", "h-[270px]", "min-w-[300px]", "bg-cyan-200", "outline", "outline-4", "outline-cyan-600", "rounded-lg"]
 
 let shipSelectionButtonDiv = null;
 const shipSelectionButtonDivStyleList = ["flex", "flex-col", "justify-center", "items-center", "px-4", "my-1", "py-3", "bg-cyan-200", "rounded-lg"];
@@ -388,6 +445,8 @@ rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "r
     }
     rotateAllShips(playerShipList);
 });
+
+
 
 startButton = createButtonAndEventListener(shipSelectionButtonDiv, "submit", "submit-button", shipSelectionButtonStyleList, "bg-blue-500", () => {console.log("Button Clicked")});
 // patrolBoat.rotate();
