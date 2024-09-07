@@ -27,7 +27,7 @@ class ship {
     yTrans;
     html;
 
-    static styleList = ["flex", "rounded-full"];//Does not include color or length. 
+    styleList;//Does not include color or length. 
     // full styleList [display, rounded, color, width, height]
     constructor(shipName, length, rotation, color) {
         this.length = length;
@@ -47,7 +47,8 @@ class ship {
         this.dragging = false;
         this.xTrans = null;
         this.yTrans = null;
-        this.html = createAndAppendChildElement(shipSelectionScreen, "div", shipName, ship.styleList);
+        this.styleList = ["flex", "rounded-full"];
+        this.html = createAndAppendChildElement(shipSelectionScreen, "div", shipName, this.styleList);
 
         this.html.classList.add(color);
         this.html.classList.add(this.calculateHTMLWidth(), this.calculateHTMLLength());
@@ -56,11 +57,25 @@ class ship {
         this.addEventListeners();
         
     }
-    placeToGrid(x, y, rotation) {
-        this.topXCoord = x;
-        this.topYCoord = y;
-        this.rotation = rotation;
+    rotate() {
+        this.html.classList.remove(this.calculateHTMLWidth());
+        this.html.classList.remove(this.calculateHTMLLength());
+        this.rotation === "-" ? this.rotation = "|" : this.rotation = "-";
+        console.log("rotating");
+        this.html.classList.add(this.calculateHTMLWidth());
+        this.html.classList.add(this.calculateHTMLLength());
+        // this.html.classList.add();
+        // if (this.rotation === "-" ){
+        //     this.rotation == "|";
+        // } else {
+
+        // }
     }
+    // placeToGrid(x, y, rotation) {
+    //     this.topXCoord = x;
+    //     this.topYCoord = y;
+    //     this.rotation = rotation;
+    // }
     calculateHTMLWidth() {
         if (this.rotation === "-") {
             return `w-[${this.length * 50}px]`;
@@ -118,6 +133,16 @@ class ship {
                 let snapY = shipSelectionScreen.getBoundingClientRect().y + (shipSelectionScreen.getBoundingClientRect().bottom - shipSelectionScreen.getBoundingClientRect().y) / 2;
                 draggedItem.xTrans = event.x - snapX; 
                 draggedItem.yTrans = event.y - snapY;
+                // console.log(event);
+                // console.log("snapX" + snapX);
+                // console.log("snapY" + snapY);
+                // console.log(draggedItem.xTrans);
+                // console.log(draggedItem.yTrans);
+                //clientX
+                //page
+                //screen
+                //x
+                //Need to figure out why it does not work on mobile
                 
             }
             // console.log(draggedItem.xTrans);
@@ -137,7 +162,7 @@ class ship {
                 
             } else {
                 draggedItem.html.classList.remove(...draggedItem.html.classList);
-                draggedItem.html.classList.add(...ship.styleList);
+                draggedItem.html.classList.add(...this.styleList);
                 draggedItem.html.classList.add(this.calculateHTMLWidth(), this.calculateHTMLLength(), this.color);
                 draggedItem.xTrans = null;
                 draggedItem.yTrans = null;
@@ -202,6 +227,64 @@ function createButtonAndEventListener(parent, name, id, styleList, backgroundCol
     button.addEventListener("click", onClickFunction); // Add button click functionality later
     return button;
 }
+function rotateAllShips(shipList) {
+    for (let i = 0; i < shipList.length; i++) {
+        shipList[i].rotate();
+    }
+}
+
+
+
+
+
+
+document.addEventListener("pointermove", (event) => {
+    
+    if (draggedItem !== null && draggedItem.dragging === true) {
+        let draggedItemHtml = draggedItem.html;
+        // console.log(dragging);
+        // console.log(event);
+        // console.log("pointer is moving")
+        if (event.movementX !== 0) {
+            // console.log(event.movementX);
+        } 
+        draggedItemHtml.classList.remove(`translate-x-[${draggedItem.xTrans}px]`);
+        draggedItemHtml.classList.remove(`translate-y-[${draggedItem.yTrans}px]`);
+        draggedItem.xTrans += event.movementX;
+        draggedItem.yTrans += event.movementY;
+        draggedItemHtml.classList.add(`translate-x-[${draggedItem.xTrans}px]`);
+        draggedItemHtml.classList.add(`translate-y-[${draggedItem.yTrans}px]`);
+    }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // let playerScreen = document.getElementById("player-screen");
@@ -233,7 +316,7 @@ let shipSelectionSectionGroupingStyleList = ["flex", "flex-row", "gap-x-5"];
 
 
 let shipSelectionScreen = null;
-const shipSelectionSectionStyleList = ["flex", "flex-row", "justify-center", "items-center","gap-x-4", "py-4", "w-[500px]", "h-[270px]", "min-w-[300px]", "bg-cyan-200", "outline", "outline-4", "outline-cyan-600", "rounded-lg"]
+const shipSelectionSectionStyleList = ["flex", "flex-row", "wrap", "justify-center", "items-center","gap-x-4", "py-4", "w-[500px]", "h-[270px]", "min-w-[300px]", "bg-cyan-200", "outline", "outline-4", "outline-cyan-600", "rounded-lg"]
 
 let shipSelectionButtonDiv = null;
 const shipSelectionButtonDivStyleList = ["flex", "flex-col", "justify-center", "items-center", "px-4", "my-1", "py-3", "bg-cyan-200", "rounded-lg"];
@@ -274,37 +357,49 @@ shipSelectionScreen = createAndAppendChildElement(shipSelectionSectionGrouping, 
 
 shipSelectionButtonDiv = createAndAppendChildElement(shipSelectionSectionGrouping, "div", "ship-selection-buttons",shipSelectionButtonDivStyleList);
 
-//Tune colors later
-rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "rotate-button", shipSelectionButtonStyleList, "bg-red-500", () => {
 
+
+
+
+
+
+
+
+
+
+
+
+
+let playerCarrier = new ship("carrier", 5, "|", "bg-blue-900");
+let playerBattleShip = new ship("battleship", 4, "|", "bg-stone-500");
+let playerSubmarine = new ship("submarine", 3,"|", "bg-rose-900");
+let playerPatrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900");
+
+let playerShipList = [playerCarrier, playerBattleShip, playerSubmarine, playerPatrolBoat]
+
+rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "rotate-button", shipSelectionButtonStyleList, "bg-red-500", () => {
+    let shipSelectionScreenClassList = shipSelectionScreen.classList;
+    if (shipSelectionScreenClassList.contains("flex-col") ) {
+        shipSelectionScreenClassList.remove("flex-col");
+        shipSelectionScreenClassList.add("flex-row");
+    } else {
+        shipSelectionScreenClassList.remove("flex-row");
+        shipSelectionScreenClassList.add("flex-col");
+    }
+    rotateAllShips(playerShipList);
 });
 
 startButton = createButtonAndEventListener(shipSelectionButtonDiv, "submit", "submit-button", shipSelectionButtonStyleList, "bg-blue-500", () => {console.log("Button Clicked")});
+// patrolBoat.rotate();
 
-document.addEventListener("pointermove", (event) => {
-    
-    if (draggedItem !== null && draggedItem.dragging === true) {
-        let draggedItemHtml = draggedItem.html;
-        // console.log(dragging);
-        // console.log(event);
-        // console.log("pointer is moving")
-        if (event.movementX !== 0) {
-            // console.log(event.movementX);
-        } 
-        draggedItemHtml.classList.remove(`translate-x-[${draggedItem.xTrans}px]`);
-        draggedItemHtml.classList.remove(`translate-y-[${draggedItem.yTrans}px]`);
-        draggedItem.xTrans += event.movementX;
-        draggedItem.yTrans += event.movementY;
-        draggedItemHtml.classList.add(`translate-x-[${draggedItem.xTrans}px]`);
-        draggedItemHtml.classList.add(`translate-y-[${draggedItem.yTrans}px]`);
-    }
-})
+// let computerCarrier = new ship("carrier", 5, "|", "bg-blue-900");
+// let computerBattleShip = new ship("battleship", 4, "|", "bg-stone-500");
+// let computerSubmarine = new ship("submarine", 3,"|", "bg-rose-900");
+// let computerPatrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900");
+
+// console.log(patrolBoat.rotation);
 
 
-let carrier = new ship("carrier", 5, "|", "bg-blue-900");
-let battleShip = new ship("battleship", 4, "|", "bg-stone-500");
-let submarine = new ship("submarine", 3,"|", "bg-rose-900");
-let patrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900");
 //Carrier BattleShip Sumbarine, patrol boat
 
 // let screen = document.createElement("div");
