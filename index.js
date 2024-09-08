@@ -34,7 +34,10 @@ class ship {
 
     styleList;//Does not include color or length. 
     // full styleList [display, rounded, color, width, height]
-    constructor(shipName, length, rotation, color, parent) {
+    constructor(shipName, length, rotation, color, parent, customStyleList, display) {
+        console.log("-----e");
+        console.log(customStyleList);
+        console.log("-----e");
         this.parent = parent;
         this.length = length;
         this.rotation = rotation;
@@ -48,8 +51,35 @@ class ship {
         this.dragging = false;
         this.xTrans = null;
         this.yTrans = null;
-        this.styleList = ["flex", "rounded-full"];
+        if (typeof display !== "undefined") {
+            this.styleList = [display, "rounded-full"];
+        } else {
+            this.styleList = ["flex", "rounded-full"];
+        }
+        
+        if (typeof customStyleList !== "undefined") {
+            console.log("Custom Style List");
+            console.log(customStyleList);
+            console.log("The type of custom style list is: " + typeof customStyleList);
+            console.log("Custom style list is: ");
+            for (let i = 0; i < customStyleList.length; i++) {
+                console.log(customStyleList[i]);
+            }
+            console.log(shipName + " was sent: " + customStyleList[0] + " | " + customStyleList[1]);
+            this.styleList.push(customStyleList[0], customStyleList[1]);
+            if (typeof display !== "undefined") {
+                this.styleList
+            }
+            console.log("------")
+            console.log("Final Style List: "); // Custom stylelist only has x and y transform
+            console.log(this.styleList);
+            console.log("------")
+        }
+        
+        
         this.html = createAndAppendChildElement(this.parent, "div", shipName, this.styleList);
+
+        
 
         this.html.classList.add(color);
         this.html.classList.add(this.calculateHTMLWidth(), this.calculateHTMLLength());
@@ -122,6 +152,9 @@ class ship {
     get firstSquareYCoordInPx() {
         return this.html.getBoundingClientRect().y + 25;
     }
+    get styleList() {
+
+    }
     
     get isDestroyed() {
         let isDestroyed = true;
@@ -160,8 +193,8 @@ class ship {
                 draggedItem.xTrans = event.clientX - snapX; 
                 draggedItem.yTrans = event.clientY - snapY;
 
-                console.log(event.target);
-                console.log(event);
+                // console.log(event.target);
+                // console.log(event);
                 //Would allow for it to work on mobile screen sizes but has been depreciated for more than 10 years and broken on webkit that tailwind uses
                 //It works on any ship for the first time them breaks for all furthers ships
                 // draggedItem.xTrans = event.layerX - snapX; 
@@ -292,6 +325,11 @@ function xyCoordIsIn(parent, x, y) {
     return false;
 }
 function calculateShipCoordsFromTopCoords(topX, topY, ship) {
+    console.log("----------");
+    console.log("topX: " + topX);
+    console.log("topY: " + topY);
+    console.dir("ship: " + ship);
+    console.log("----------");
     let shipCoordsList = [];
     let incrementCoord = 0;
     let staticCoord = 0; 
@@ -338,24 +376,27 @@ function shipFits(playerScreen, draggedShip) {
     // let screenBottomX = playerScreen.getBoundingClientRect().bottom;
 
     // let draggedItemTopX = draggedItem.html.getBoundingClientRect().x;
-    let draggedShipTopY = draggedShip.html.getBoundingClientRect().y;
+    //let draggedShipTopY = draggedShip.html.getBoundingClientRect().y;
     // let draggedItemRightX = draggedItem.html.getBoundingClientRect().right;
     // let draggedItemBottomX = draggedItem.html.getBoundingClientRect().bottom;
 
     let draggedShipStartGridX = draggedShip.firstSquareXCoordInPx;
     let draggedShipStartGridY = draggedShip.firstSquareYCoordInPx;
-    let gridDisplacementDistanceX = draggedShipStartGridX - screenTopX;
+    console.log("Ship top grid center X coord: " + draggedShipStartGridX);
+    console.log("Ship top grid center Y coord: " + draggedShipStartGridY);
+    let gridDisplacementDistanceX = draggedShipStartGridX - screenTopX; // mabye use these values
     let gridDisplacementDistanceY = draggedShipStartGridY - screenTopY;
     console.log("draggedShipStartGridX: " + draggedShipStartGridX);
     console.log("draggedShipStartGridY: " + draggedShipStartGridY);
-    let topGridSquareX = Math.trunc(draggedShipStartGridX / 50) - 1;
-    let topGridSquareY = Math.trunc(draggedShipStartGridY / 50) - 1;
+    let topGridSquareX = Math.trunc(gridDisplacementDistanceX / 50);
+    let topGridSquareY = Math.trunc(gridDisplacementDistanceY / 50);
+    console.log("topGridSquareX: " + topGridSquareX);
+    console.log("topGridSquareY: " + topGridSquareY);
     // console.log("The output of the calculateshipcoords is: " + calculateShipCoordsFromTopCoords(topGridSquareX, topGridSquareY, draggedShip));
     let shipCoordCalc = calculateShipCoordsFromTopCoords(topGridSquareX, topGridSquareY, draggedShip);
     console.log("shipCoordCalc: " + shipCoordCalc);
     if (shipCoordCalc !== false) {return {x: topGridSquareX, y: topGridSquareY, calc: shipCoordCalc};} else {return false;}
-    console.log("topGridSquareX: " + topGridSquareX);
-    console.log("topGridSquareY: " + topGridSquareY);
+    
     console.log("gridDisplacementDistanceX: " + gridDisplacementDistanceX);
     console.log("gridDisplacementDistanceY: " + gridDisplacementDistanceY);
     console.log("screenTopY: " + screenTopY);
@@ -507,16 +548,28 @@ class Game {
     playerShipList; 
     computerShipList;
     winner; // String holding the value if who wins, if no winner is declared yet assigned to null
+    constructor(playerShipList, computerShipList) {
+        this.playerShipList = playerShipList;
+        this.computerShipList = computerShipList;
+        this.winner = null;
+    }
     start() {
-        while(winner !== null)
-            playerMove();
-            computerMove();
+        // playerShipList.reassignParent(document.getElementById("game-info"));
+        // this.removeShipSelectionStuff();
+        while(this.winner !== null)
+            this.playerMove();
+            this.computerMove();
     }
     playerMove() {
 
     }
     computerMove() {
 
+    }
+
+    removeShipSelectionStuff() {
+        // let shipSelectionStuff = document.getElementById("ship-selection");
+        // shipSelectionStuff.remove();
     }
 }
 class ShipList {
@@ -582,6 +635,33 @@ class ShipList {
         this.submarine = new ship("submarine", 3,"|", "bg-rose-900", this.parent);
         this.patrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900", this.parent);
     }
+    reassignParent(parent) {
+        if (typeof parent !== "undefined") {
+            this.parent = parent;
+            console.log("Typeof parent = " + typeof parent);
+        }
+        // draggedItemHtml.classList.add(`translate-x-[${draggedItem.xTrans}px]`);
+        //     draggedItemHtml.classList.add(`translate-y-[${draggedItem.yTrans}px]`);
+        let previousStyleLists = [];
+        for (let i = 0; i < this.length; i++) {
+            let localArray = [`translate-x-[${this.get(i).xTrans}px]`, `translate-y-[${this.get(i).yTrans}px]`]
+            previousStyleLists.push(localArray);
+        }
+        for (let i = 0; i < this.length; i++) {
+            this.get(i).html.remove();
+        }
+        console.log("-------------------");
+        console.log("Previous Style Lists: " + previousStyleLists);
+        console.log([previousStyleLists[0]]);
+        console.log([previousStyleLists[1]]);
+        console.log([previousStyleLists[2]]);
+        console.log([previousStyleLists[3]]);
+        console.log("-------------------");
+        this.carrier = new ship("carrier", 5, "|", "bg-blue-900", this.parent, previousStyleLists[0], "fixed");
+        this.battleShip = new ship("battleship", 4, "|", "bg-stone-500", this.parent, previousStyleLists[1], "fixed");
+        this.submarine = new ship("submarine", 3,"|", "bg-rose-900", this.parent, previousStyleLists[2], "fixed");
+        this.patrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900", this.parent, previousStyleLists[3], "fixed");
+    }
     checkShipOverlap() {
         let coordList = [];
         for (let i = 0; i < this.length; i++) {
@@ -613,7 +693,7 @@ class ShipList {
 let playerShipList = new ShipList(shipSelectionScreen);
 
 // let computerShipList = new ShipList(document.body);
-
+let battleShipGame = new Game(playerShipList, undefined);
 
 
 rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "rotate-button", shipSelectionButtonStyleList, "bg-red-500", () => {
@@ -632,7 +712,7 @@ rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "r
 
 startButton = createButtonAndEventListener(shipSelectionButtonDiv, "submit", "submit-button", shipSelectionButtonStyleList, "bg-blue-500", () => {
     if (playerShipList.checkShipOverlap()) {
-        startGame();
+        battleShipGame.start();
     } else {
         alert('Ships are overlapping');
         playerShipList.reset();
