@@ -547,24 +547,67 @@ function startGame() {
 class Game {
     playerShipList; 
     computerShipList;
+    playerScreen;
+    computerScreen;
     winner; // String holding the value if who wins, if no winner is declared yet assigned to null
-    constructor(playerShipList, computerShipList) {
+    messageText;
+    messageTextClassList;
+    state;
+    constructor(playerShipList, computerShipList, playerScreen, computerScreen) {
+        this.playerScreen = playerScreen;
+        this.computerScreen = computerScreen;
         this.playerShipList = playerShipList;
         this.computerShipList = computerShipList;
         this.winner = null;
+        this.messageTextClassList = [];
+        this.state = "gameNotStarted"; // So I can easily trace where the logic is when bughunting
     }
     start() {
-        // playerShipList.reassignParent(document.getElementById("game-info"));
-        // this.removeShipSelectionStuff();
-        while(this.winner !== null)
-            this.playerMove();
-            this.computerMove();
-    }
-    playerMove() {
+        alert('game started')
+        this.messageText = createAndAppendTextElement(shipSelectionScreen, "h1", "HElp", "shipSelectionScreen", this.messageTextClassList);
+        this.state = "gameStarted";
 
-    }
-    computerMove() {
+        this.createPlayerMove();
+        this.createComputerMove();
 
+        //Asnc function that check if winner equals sothing outer than null every .1 seconds, not idea but I want this shit done!!!!!
+    }
+    createPlayerMove() {
+        this.state = "waitingForPlayerInput"
+        playerScreen.addEventListener("click", (event) => {
+            if (this.state !== "waitingForPlayerInput") {
+                return;
+            }
+            // Take the x y coords, turn them into grid coords,  and pass them through player ship list, 
+            //if any of the grid coords match the ship grid cords, change the health status of the computer ship
+            //In the same scope turn the grid cords into an id and use it to identify and change the styling of the 
+            //grid coord square thing so it is white if no ship, or has a red x with an elevated z axis if hit
+
+            //
+
+            // Tak
+            console.log("ComputerGameScreenClickEvent: ", event);
+        });
+    }
+    createComputerMove() {
+        this.state = "waitingForComputerInput"
+        playerScreen.addEventListener("click", (event) => {
+            if (this.state !== "waitingForPlayerInput") {
+                return;
+            }
+
+            //Generate coords at random, within the bounds of grid coords, and pass them through the player ship list, 
+            //if any of the grid coords match the ship grid cords, change the health status of the player ship
+            // Take the x y coords, turn them into grid coords,  and pass them through player ship list,
+            //In the same scope turn the grid cords into an id and use it to identify and change the styling of the 
+            //grid coord square thing so it is white if no ship, or has a red x with an elevated z axis if hit
+            //Check for player death using shiplist method, set this winner uppon death
+
+            //
+
+            // Tak
+            console.log("ComputerGameScreenClickEvent: ", event);
+        });
     }
 
     removeShipSelectionStuff() {
@@ -693,8 +736,7 @@ class ShipList {
 let playerShipList = new ShipList(shipSelectionScreen);
 
 // let computerShipList = new ShipList(document.body);
-let battleShipGame = new Game(playerShipList, undefined);
-
+let battleShipGame = new Game(playerShipList, undefined, playerScreen, computerScreen);
 
 rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "rotate-button", shipSelectionButtonStyleList, "bg-red-500", () => {
     let shipSelectionScreenClassList = shipSelectionScreen.classList;
