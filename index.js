@@ -20,11 +20,12 @@ function logVar(name, variable) {
 //Your priority is to build out corrdinate system tracking.
 let draggedItem = null;
 class ship {
+    parent;
     length;   // 2-5
     rotation; // - |
     placementLock;
-    health; // [o, o, x, o, x]
-    location;
+    healthArray; // [o, o, x, o, x]
+    locationArray;
 
     dragging;
     xTrans; 
@@ -33,27 +34,22 @@ class ship {
 
     styleList;//Does not include color or length. 
     // full styleList [display, rounded, color, width, height]
-    constructor(shipName, length, rotation, color) {
+    constructor(shipName, length, rotation, color, parent) {
+        this.parent = parent;
         this.length = length;
         this.rotation = rotation;
         this.placementLock = false;
         this.color = color;
-        this.health = () => {
-            let healthArray = [];
-            for (let i = 0; i < this.length;i++) {this.health.push("o");};
-            return healthArray;
-        };
-        this.location = () => {
-            let locationArray = [];
-            for (let i = 0; i < this.length;i++) {this.location.push(null);};
-            return locationArray;
-        };
+
+        this.healthArray = this.health;
+        this.locationArray = this.location;
+
 
         this.dragging = false;
         this.xTrans = null;
         this.yTrans = null;
         this.styleList = ["flex", "rounded-full"];
-        this.html = createAndAppendChildElement(shipSelectionScreen, "div", shipName, this.styleList);
+        this.html = createAndAppendChildElement(this.parent, "div", shipName, this.styleList);
 
         this.html.classList.add(color);
         this.html.classList.add(this.calculateHTMLWidth(), this.calculateHTMLLength());
@@ -73,18 +69,32 @@ class ship {
         console.log("rotating");
         this.html.classList.add(this.calculateHTMLWidth());
         this.html.classList.add(this.calculateHTMLLength());
-        // this.html.classList.add();
-        // if (this.rotation === "-" ){
-        //     this.rotation == "|";
-        // } else {
-
-        // }
     }
-    // placeToGrid(x, y, rotation) {
-    //     this.topXCoord = x;
-    //     this.topYCoord = y;
-    //     this.rotation = rotation;
-    // }
+
+    get location() {
+        if (typeof this.locationArray === "undefined") {
+            return this.getNullArray(this.length);
+        }
+        return this.locationArray
+    }
+    set location(array) {
+        this.locationArray = array;
+    }
+    get health() {
+        if (typeof this.healthArray === "undefined") {
+            return this.getNullArray(this.length);
+        }
+        return this.healthArray
+    }
+    set health(array) {
+        this.healthArray = array;
+    }
+
+    getNullArray(length) {
+        let localArray = [];
+        for (let i = 0; i < length;i++) {localArray.push(null);};
+        return localArray;
+    }
     calculateHTMLWidth() {
         if (this.rotation === "-") {
             return `w-[${this.length * 50}px]`;
@@ -100,7 +110,7 @@ class ship {
         }
     }
     get middleXCoordInPx() {
-        return this.html.getBoundingClientRect().x + 25;
+        return this.html.getBoundingClientRect().x + 25; // SOmthing bad is happenin for the middle coords
     }
     get middleYCoordInPx() {
         // return this.html.getBoundingClientRect().y - 25 - (50 * (length - 1));
@@ -145,8 +155,8 @@ class ship {
             if (draggedItem.xTrans === null || draggedItem.yTrans === null) {
 
 
-                let snapX = shipSelectionScreen.getBoundingClientRect().x + (shipSelectionScreen.getBoundingClientRect().right - shipSelectionScreen.getBoundingClientRect().x) / 2;
-                let snapY = shipSelectionScreen.getBoundingClientRect().y + (shipSelectionScreen.getBoundingClientRect().bottom - shipSelectionScreen.getBoundingClientRect().y) / 2;
+                let snapX = this.parent.getBoundingClientRect().x + (this.parent.getBoundingClientRect().right - this.parent.getBoundingClientRect().x) / 2;
+                let snapY = this.parent.getBoundingClientRect().y + (this.parent.getBoundingClientRect().bottom - this.parent.getBoundingClientRect().y) / 2;
                 draggedItem.xTrans = event.clientX - snapX; 
                 draggedItem.yTrans = event.clientY - snapY;
 
@@ -191,30 +201,6 @@ class ship {
                 console.log("calculateShipCoordsFromTopCoords: " + calculateShipCoordsFromTopCoords(draggedItem.middleXCoordInPx, draggedItem.middleYCoordInPx, draggedItem));
                 draggedItem.location = doesTheShipFit.calc;
                 console.log("Dragged ITem Location: " + draggedItem.location);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             } else {
                 draggedItem.html.classList.remove(...draggedItem.html.classList);
                 draggedItem.html.classList.add(...this.styleList);
@@ -228,8 +214,8 @@ class ship {
     }
 }
 window.addEventListener("click", (event) => {
-    console.log(event.clientX);
-    console.log(event.clientY);
+    console.log("Clicked X Coord: " + event.clientX);
+    console.log("Clicked Y Coord: " + event.clientY);
 });
 function createAndAppendChildElement(parent, elementString, id, styleList) {
     let element = document.createElement(elementString);
@@ -288,7 +274,7 @@ function createButtonAndEventListener(parent, name, id, styleList, backgroundCol
 }
 function rotateAllShips(shipList) {
     for (let i = 0; i < shipList.length; i++) {
-        shipList[i].rotate();
+        shipList.get(i).rotate();
     }
 }
 function xyCoordIsIn(parent, x, y) {
@@ -296,10 +282,10 @@ function xyCoordIsIn(parent, x, y) {
     let parentTopY = parent.getBoundingClientRect().y;
     let parentRightX = parent.getBoundingClientRect().right;
     let parentBottomX = parent.getBoundingClientRect().bottom;
-console.log(parent.getBoundingClientRect().x);
-console.log(parent.getBoundingClientRect().y);
-console.log(parent.getBoundingClientRect().right);
-console.log(parent.getBoundingClientRect().bottom);
+// console.log(parent.getBoundingClientRect().x);
+// console.log(parent.getBoundingClientRect().y);
+// console.log(parent.getBoundingClientRect().right);
+// console.log(parent.getBoundingClientRect().bottom);
     if (x > parentTopX && x < parentRightX && y > parentTopY && y < parentBottomX) {
         return true;
     }
@@ -309,7 +295,7 @@ function calculateShipCoordsFromTopCoords(topX, topY, ship) {
     let shipCoordsList = [];
     let incrementCoord = 0;
     let staticCoord = 0; 
-    console.log(ship.rotation);
+    console.log("ship rotation: " + ship.rotation);
     let coordGrid = 0;
     let refreshCoordGrid = 0; 
     
@@ -339,7 +325,7 @@ function calculateShipCoordsFromTopCoords(topX, topY, ship) {
             return false;
         }
     }
-    console.log(shipCoordsList);
+    console.log("ship Coord list: " + shipCoordsList);
     return shipCoordsList;
     
     //Return array of coords if fits, fals otherwisse
@@ -376,25 +362,7 @@ function shipFits(playerScreen, draggedShip) {
     console.log("draggedItemTopY: " + draggedShipTopY);
     
 }
-function shipsDontOverlap(shipList) {
-    let coordList = [];
-    for (let i = 0; i < shipList.length; i++) {
-        if (shipList[i].location[i] === null) {
-            alert('not all ships are placed');
-            return false;
-        }
-        coordList.push(...shipList[i].location);
-    }
-    for (let i = 0; i < coordList.length - 1; i++) {
-        coordList.sort();
-        if (coordList[i] === coordList[i - 1]) {
-            return false;
-        }
-    }
-    console.log(coordList);
-    return true;
 
-}
 
 
 
@@ -535,27 +503,116 @@ function startGame() {
     return 0;
 };
 
+class Game {
+    playerShipList; 
+    computerShipList;
+    winner; // String holding the value if who wins, if no winner is declared yet assigned to null
+    start() {
+        while(winner !== null)
+            playerMove();
+            computerMove();
+    }
+    playerMove() {
 
+    }
+    computerMove() {
 
-
-
-let playerCarrier = new ship("carrier", 5, "|", "bg-blue-900");
-let playerBattleShip = new ship("battleship", 4, "|", "bg-stone-500");
-let playerSubmarine = new ship("submarine", 3,"|", "bg-rose-900");
-let playerPatrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900");
-let playerShipList = [playerCarrier, playerBattleShip, playerSubmarine, playerPatrolBoat]
-
-function recreateShips() {
-    playerCarrier.html.remove();
-    playerBattleShip.html.remove();
-    playerSubmarine.html.remove();
-    playerPatrolBoat.html.remove();
-    playerCarrier = new ship("carrier", 5, "|", "bg-blue-900");
-    playerBattleShip = new ship("battleship", 4, "|", "bg-stone-500");
-    playerSubmarine = new ship("submarine", 3,"|", "bg-rose-900");
-    playerPatrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900");
-    playerShipList = [playerCarrier, playerBattleShip, playerSubmarine, playerPatrolBoat]
+    }
 }
+class ShipList {
+    carrier;
+    battleship;
+    submarine;
+    patrolBoat;
+    parent;
+    constructor(parent) {
+        if (typeof parent === "undefined") {alert('invalid parent parmeter for the shiplist constructor')}
+        this.parent = parent;
+        this.carrier = new ship("carrier", 5, "|", "bg-blue-900", parent),
+        this.battleShip = new ship("battleship", 4, "|", "bg-stone-500", parent),
+        this.submarine = new ship("submarine", 3,"|", "bg-rose-900", parent),
+        this.patrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900", parent)
+    }
+    get(index) {
+        if (typeof index === "string") {
+            switch (index) {
+                case "carrier": 
+                    return this.carrier;
+                case "battleship": 
+                    return this.battleShip;
+                case "submarine": 
+                    return this.submarine;
+                case "patrolBoat": 
+                case "patrol boat":
+                    return this.patrolBoat;
+            }
+            alert('shipList get function does not recognize string')
+        } else if (typeof index === "number") {
+            switch (index) {
+                case 0: 
+                    return this.carrier;
+                case 1: 
+                    return this.battleShip;
+                case 2: 
+                    return this.submarine;
+                case 3: 
+                    return this.patrolBoat; 
+            }
+            alert('shipList get function does not recognize index')
+        } else {
+            alert('Getting index of ship has failed')
+            return null;
+        }
+        
+    } 
+    get length() {
+        return 4;
+    }
+
+    reset(parent) {
+        if (typeof parent !== "undefined") {
+            this.parent = parent;
+            console.log("Typeof parent = " + typeof parent);
+        }
+        for (let i = 0; i < this.length; i++) {
+            this.get(i).html.remove();
+        }
+        this.carrier = new ship("carrier", 5, "|", "bg-blue-900", this.parent);
+        this.battleShip = new ship("battleship", 4, "|", "bg-stone-500", this.parent);
+        this.submarine = new ship("submarine", 3,"|", "bg-rose-900", this.parent);
+        this.patrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900", this.parent);
+    }
+    checkShipOverlap() {
+        let coordList = [];
+        for (let i = 0; i < this.length; i++) {
+            if (this.get(i).location[i] === null) {
+                alert('not all ships are placed');
+                return false;
+            }
+            coordList.push(...this.get(i).location);
+            // for (let j = 0; j < this.get(i).location[i].length; j++) {
+            //     coordList.push(this.get(i).location);
+            // }
+            
+        }
+        console.log("Ship coord List: " + coordList);
+        for (let i = 0; i < coordList.length - 1; i++) {
+            coordList.sort();
+            if (coordList[i] === coordList[i - 1]) {
+                return false;
+            }
+        }
+        console.log("Ship coord List: " + coordList);
+        return true;
+    }
+
+}
+
+
+
+let playerShipList = new ShipList(shipSelectionScreen);
+
+// let computerShipList = new ShipList(document.body);
 
 
 
@@ -574,11 +631,11 @@ rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "r
 
 
 startButton = createButtonAndEventListener(shipSelectionButtonDiv, "submit", "submit-button", shipSelectionButtonStyleList, "bg-blue-500", () => {
-    if (shipsDontOverlap(playerShipList)) {
+    if (playerShipList.checkShipOverlap()) {
         startGame();
     } else {
         alert('Ships are overlapping');
-        recreateShips();
+        playerShipList.reset();
         let shipSelectionScreenClassList = shipSelectionScreen.classList;
         if (shipSelectionScreenClassList.contains("flex-col") ) {
             shipSelectionScreenClassList.remove("flex-col");
