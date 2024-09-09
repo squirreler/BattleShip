@@ -34,7 +34,7 @@ class ship {
 
     styleList;//Does not include color or length. 
     // full styleList [display, rounded, color, width, height]
-    constructor(shipName, length, rotation, color, parent, customStyleList, display) {
+    constructor(shipName, length, rotation, color, parent, display, customStyleList) {
         console.log("-----e");
         console.log(customStyleList);
         console.log("-----e");
@@ -58,18 +58,19 @@ class ship {
         }
         
         if (typeof customStyleList !== "undefined") {
-            console.log("Custom Style List");
-            console.log(customStyleList);
-            console.log("The type of custom style list is: " + typeof customStyleList);
-            console.log("Custom style list is: ");
-            for (let i = 0; i < customStyleList.length; i++) {
-                console.log(customStyleList[i]);
-            }
+            // console.log("Custom Style List");
+            // console.log(customStyleList);
+            // console.log("The type of custom style list is: " + typeof customStyleList);
+            // console.log("Custom style list is: ");
+            // for (let i = 0; i < customStyleList.length; i++) {
+            //     console.log(customStyleList[i]);
+            // }
             console.log(shipName + " was sent: " + customStyleList[0] + " | " + customStyleList[1]);
+
+
             this.styleList.push(customStyleList[0], customStyleList[1]);
-            if (typeof display !== "undefined") {
-                this.styleList
-            }
+
+
             console.log("------")
             console.log("Final Style List: "); // Custom stylelist only has x and y transform
             console.log(this.styleList);
@@ -231,7 +232,6 @@ class ship {
                 console.log("does the ship fit: " + doesTheShipFit.x + " | " + doesTheShipFit.y + " | " + doesTheShipFit.calc);
             if (doesTheShipFit != false) {
                 draggedItem.placementLock = true;
-                console.log("calculateShipCoordsFromTopCoords: " + calculateShipCoordsFromTopCoords(draggedItem.middleXCoordInPx, draggedItem.middleYCoordInPx, draggedItem));
                 draggedItem.location = doesTheShipFit.calc;
                 console.log("Dragged ITem Location: " + draggedItem.location);
             } else {
@@ -295,7 +295,18 @@ function createScreen(parentDiv,outlineColor, id, styleList) {
 }
 function createButtonAndEventListener(parent, name, id, styleList, backgroundColor, onClickFunction) {
     let button = document.createElement("button");
-    button.appendChild(document.createTextNode(name));
+    let lineBreak = false;
+    for (let i = 0; i < name.length; i++) {
+        console.log(name[i]);
+        if (name[i] === " ") {
+            lineBreak = true;
+            button.appendChild(document.createTextNode(name.slice(0, i)));
+            button.appendChild(document.createElement("br"));
+            button.appendChild(document.createTextNode(name.slice(i + 1)));
+        }
+    }
+    if (lineBreak === false) {button.appendChild(document.createTextNode(name));}
+    
     if (id !== "" || id !== "none") {
         button.id = id;
     } 
@@ -386,6 +397,9 @@ function shipFits(playerScreen, draggedShip) {
     console.log("Ship top grid center Y coord: " + draggedShipStartGridY);
     let gridDisplacementDistanceX = draggedShipStartGridX - screenTopX; // mabye use these values
     let gridDisplacementDistanceY = draggedShipStartGridY - screenTopY;
+    if (gridDisplacementDistanceX > 500 || gridDisplacementDistanceX < 0 || gridDisplacementDistanceY > 500 || gridDisplacementDistanceY < 0) {
+        return false;
+    }
     console.log("draggedShipStartGridX: " + draggedShipStartGridX);
     console.log("draggedShipStartGridY: " + draggedShipStartGridY);
     let topGridSquareX = Math.trunc(gridDisplacementDistanceX / 50);
@@ -482,7 +496,7 @@ const screenLengthWidthSizePx = 500;
 const screenStyleList = ["flex", "flex-wrap", `w-[${screenLengthWidthSizePx}px]`, `h-[${screenLengthWidthSizePx}px]`, "bg-sky-500", "rounded-lg", "outline", "outline-8"];
 const squaresPerScreen = 100;
 const gridSquareLengthWidthSizePx = screenLengthWidthSizePx / squaresPerScreen * 10;
-const gridDivStyleList = [`w-[${gridSquareLengthWidthSizePx}px]`, `h-[${gridSquareLengthWidthSizePx}px]`]; 
+const gridDivStyleList = [`w-[${gridSquareLengthWidthSizePx}px]`, `h-[${gridSquareLengthWidthSizePx}px]`, "flex", "justify-center", "align-center"]; 
 
 
 let shipSelectionSectionGrouping = null;
@@ -494,12 +508,13 @@ let shipSelectionScreen = null;
 const shipSelectionSectionStyleList = ["flex", "flex-row", "wrap", "justify-center", "items-center","gap-x-4", "gap-y-2", "py-4", "w-[500px]", "h-[270px]", "min-w-[300px]", "bg-cyan-200", "outline", "outline-4", "outline-cyan-600", "rounded-lg"]
 
 let shipSelectionButtonDiv = null;
-const shipSelectionButtonDivStyleList = ["flex", "flex-col", "justify-center", "items-center", "px-4", "my-1", "py-3", "bg-cyan-200", "rounded-lg"];
+const shipSelectionButtonDivStyleList = ["flex", "flex-col", "justify-center", "items-center", "w-[150px]", "h-[220]", "my-1", "py-3", "bg-cyan-200", "rounded-lg"];
 
 
 let rotateButton = null;
 let startButton = null;
-const shipSelectionButtonStyleList = ["flex", "px-4", "py-2", "mx-2", "my-2", "rounded-full"];
+// const shipSelectionButtonStyleList = ["flex", "px-2", "py-2", "mx-2", "my-2", "rounded-full"];
+const shipSelectionButtonStyleList = ["flex", "justify-center", "items-center", "px-2", "py-2", "mx-2", "my-2", "min-w-[120px]", "rounded-full", "text-white"];
 
 
 const screenSectionHeadingTextStyleList = ["py-4"];
@@ -521,12 +536,14 @@ createAndAppendTextElement(computerScreenSection, "h1", "Computers Ships", "", s
 
 playerScreen = createScreen(playerScreenSection, "outline-blue-700", "player-screen", screenStyleList);
 computerScreen = createScreen(computerScreenSection, "outline-red-500","player-screen", screenStyleList);
+let playerGridBackgroundColor = "bg-sky-500";
+let computerGridBackroundColor = "outline-rose-500";
 createGrid(playerScreen, "outline-blue-700","bg-sky-500",gridDivStyleList);
 createGrid(computerScreen, "outline-rose-500", "bg-sky-500", gridDivStyleList); // set bg here
 
 
 
-createAndAppendTextElement(shipSelectionSection, "h1", "Choose Ships", "", shipSelectionTextStyleList);
+createAndAppendTextElement(shipSelectionSection, "h1", "Place Ships on your Grid", "", shipSelectionTextStyleList);
 shipSelectionSectionGrouping = createAndAppendChildElement(shipSelectionSection, "div", "ship-selection-grouping", shipSelectionSectionGroupingStyleList);
 shipSelectionScreen = createAndAppendChildElement(shipSelectionSectionGrouping, "div", "ship-selection-screen", shipSelectionSectionStyleList);
 
@@ -551,22 +568,36 @@ class Game {
     computerScreen;
     winner; // String holding the value if who wins, if no winner is declared yet assigned to null
     messageText;
+    messageTextBelow;
     messageTextClassList;
     state;
-    constructor(playerShipList, computerShipList, playerScreen, computerScreen) {
+
+    playerTurnIcon;
+    computerTurnIcon
+
+
+    constructor(playerShipList, computerShipList, playerScreen, computerScreen, playerTurnIcon, computerTurnIcon) {
         this.playerScreen = playerScreen;
         this.computerScreen = computerScreen;
         this.playerShipList = playerShipList;
         this.computerShipList = computerShipList;
+        this.playerTurnIcon = playerTurnIcon;
+        this.computerTurnIcon = computerTurnIcon;
         this.winner = null;
         this.messageTextClassList = [];
         this.state = "gameNotStarted"; // So I can easily trace where the logic is when bughunting
+        this.messageText = null;
+        this.messageTextBelow = null;
     }
     start() {
         alert('game started')
-        this.messageText = createAndAppendTextElement(shipSelectionScreen, "h1", "HElp", "shipSelectionScreen", this.messageTextClassList);
+        this.messageText = createAndAppendTextElement(shipSelectionScreen, "h1", "Your Move: ", "shipSelectionScreen", this.messageTextClassList);
+        this.messageTextBelow = createAndAppendTextElement(shipSelectionScreen, "h1", "Click on Enemy Grid Board to Attack!", "shipSelectionScreen", this.messageTextClassList);
         this.state = "gameStarted";
-
+        if (this.computerShipList.manuallyAssignCoords() === true) {
+            alert('Computer ship list set')
+        }
+        
         this.createPlayerMove();
         this.createComputerMove();
 
@@ -578,12 +609,33 @@ class Game {
             if (this.state !== "waitingForPlayerInput") {
                 return;
             }
+            console.log("---------------------------------------");
+            console.log("Player Attack Click");
+            let screenTopX = playerScreen.getBoundingClientRect().x;
+            let screenTopY = playerScreen.getBoundingClientRect().y;
+            console.log("Attack click event: " + event);
+            let eventClickCoordX = event.clientX;;
+            let eventClickCoordY = event.clientY;
+            console.log("event Click Coord X: " + eventClickCoordX);
+            console.log("event Click Coord Y: " + eventClickCoordY);
+            let gridDisplacementDistanceX = eventClickCoordX - screenTopX; // mabye use these values
+            let gridDisplacementDistanceY = eventClickCoordY - screenTopY;
+            if (gridDisplacementDistanceX > 500 || gridDisplacementDistanceX < 0 || gridDisplacementDistanceY > 500 || gridDisplacementDistanceY < 0) {
+                alert('Did not click on a valid grid square');
+            }
+            console.log("gridDisplacementCoordX: " + gridDisplacementDistanceX);
+            console.log("gridDisplacementCoordY: " + gridDisplacementDistanceY);
+            let topGridSquareX = Math.trunc(gridDisplacementDistanceX / 50);
+            let topGridSquareY = Math.trunc(gridDisplacementDistanceY / 50);
+            console.log("topGridSquareX: " + topGridSquareX);
+            console.log("topGridSquareY: " + topGridSquareY);
+            console.log("---------------------------------------");
             // Take the x y coords, turn them into grid coords,  and pass them through player ship list, 
             //if any of the grid coords match the ship grid cords, change the health status of the computer ship
             //In the same scope turn the grid cords into an id and use it to identify and change the styling of the 
             //grid coord square thing so it is white if no ship, or has a red x with an elevated z axis if hit
 
-            //
+            
 
             // Tak
             console.log("ComputerGameScreenClickEvent: ", event);
@@ -595,7 +647,7 @@ class Game {
             if (this.state !== "waitingForPlayerInput") {
                 return;
             }
-
+            
             //Generate coords at random, within the bounds of grid coords, and pass them through the player ship list, 
             //if any of the grid coords match the ship grid cords, change the health status of the player ship
             // Take the x y coords, turn them into grid coords,  and pass them through player ship list,
@@ -614,20 +666,48 @@ class Game {
         // let shipSelectionStuff = document.getElementById("ship-selection");
         // shipSelectionStuff.remove();
     }
+    addMarkToGridSquare(gridSquare, mark) {
+        if (typeof mark !== "string") {
+            alert("addMarkTOGridSquare invalid mark parameter input");
+        }
+        if (mark === "x") {
+            createAndAppendTextElement(gridSquare, "h1", "x", "", ["text-red-500", "text-5xl", "z-10"]);
+            if (gridSquare.parentElement.id === "player-screen") {
+                gridSquare.classList.remove(playerGridBackgroundColor);
+
+            }  
+            if (gridSquare.parentElement.id === "computer-screen") {
+                gridSquare.classList.remove(computerGridBackroundColor);
+            }  
+            gridSquare.classList.add("bg-red-300");
+        }
+        if (mark === "o") {
+            if (gridSquare.parentElement.id === "player-screen") {
+                gridSquare.classList.remove(playerGridBackgroundColor);
+
+            }  
+            if (gridSquare.parentElement.id === "computer-screen") {
+                gridSquare.classList.remove(computerGridBackroundColor);
+            }  
+            gridSquare.classList.add("bg-sky-200");
+        }
+    }
 }
+
 class ShipList {
     carrier;
     battleship;
     submarine;
     patrolBoat;
     parent;
-    constructor(parent) {
+
+    constructor(parent, display) {
         if (typeof parent === "undefined") {alert('invalid parent parmeter for the shiplist constructor')}
         this.parent = parent;
-        this.carrier = new ship("carrier", 5, "|", "bg-blue-900", parent),
-        this.battleShip = new ship("battleship", 4, "|", "bg-stone-500", parent),
-        this.submarine = new ship("submarine", 3,"|", "bg-rose-900", parent),
-        this.patrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900", parent)
+        this.carrier = new ship("carrier", 5, "|", "bg-blue-900", parent, display),
+        this.battleShip = new ship("battleship", 4, "|", "bg-stone-500", parent, display),
+        this.submarine = new ship("submarine", 3,"|", "bg-rose-900", parent, display),
+        this.patrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900", parent, display)
     }
     get(index) {
         if (typeof index === "string") {
@@ -700,10 +780,10 @@ class ShipList {
         console.log([previousStyleLists[2]]);
         console.log([previousStyleLists[3]]);
         console.log("-------------------");
-        this.carrier = new ship("carrier", 5, "|", "bg-blue-900", this.parent, previousStyleLists[0], "fixed");
-        this.battleShip = new ship("battleship", 4, "|", "bg-stone-500", this.parent, previousStyleLists[1], "fixed");
-        this.submarine = new ship("submarine", 3,"|", "bg-rose-900", this.parent, previousStyleLists[2], "fixed");
-        this.patrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900", this.parent, previousStyleLists[3], "fixed");
+        this.carrier = new ship("carrier", 5, "|", "bg-blue-900", this.parent, "fixed", previousStyleLists[0]);//Mark
+        this.battleShip = new ship("battleship", 4, "|", "bg-stone-500", this.parent, "fixed", previousStyleLists[1]);
+        this.submarine = new ship("submarine", 3,"|", "bg-rose-900", this.parent, "fixed", previousStyleLists[2]);
+        this.patrolBoat = new ship("patrol boat", 2, "|", "bg-emerald-900", this.parent, "fixed", previousStyleLists[3]);
     }
     checkShipOverlap() {
         let coordList = [];
@@ -728,16 +808,70 @@ class ShipList {
         console.log("Ship coord List: " + coordList);
         return true;
     }
+    getRandomInt(max) {
+        //Copied entire function from mdn
+        return Math.floor(Math.random() * max);
+    }
+    getRandomFilteredGridCoords(shipLength) {
+        let coordsList = [];
+        let gridLength = 10;
+        let rotation = this.getRandomInt(2);
+        let randomX = null;
+        let randomY = null;
+        (rotation === 0) ? rotation = "|" : rotation = "-";
+        if (rotation === "|") {
+            randomX = this.getRandomInt(10);
+            randomY = this.getRandomInt(gridLength - shipLength + 1);
+        }
+        if (rotation === "-") {
+            randomX = this.getRandomInt(gridLength - shipLength + 1);
+            randomY = this.getRandomInt(10);
+        }
+        for (let i = 0; i < shipLength; i++) {
+            coordsList.push(`${randomX}-${randomY}`);
+            ( rotation === "|" ) ? randomY++ : randomX++;
+        }
+        return coordsList;
+    }
+    manuallyAssignCoords() {
+        let localCoordList = [];
+        for (let i = 0; i < this.length; i++) {
+            let localShip = this.get(i);
+            let randomFilteredCoords = this.getRandomFilteredGridCoords(localShip.length);
+            localShip.location = randomFilteredCoords;
+            localCoordList.push(localShip.location)
+        }
+        if (this.checkShipOverlap()) {
+            console.log("Computer ships are placed correctily");
+            console.log("Final Coord List", localCoordList.sort());
+            return true;
+        } else {
+            return this.manuallyAssignCoords();
+        }
+    }
 
 }
 
 
 
+
+
+let playerTurnIcon = null;
+let computerTurnIcon = null;
+
 let playerShipList = new ShipList(shipSelectionScreen);
+let computerShipList = new ShipList(shipSelectionScreen, "hidden");
 
 // let computerShipList = new ShipList(document.body);
-let battleShipGame = new Game(playerShipList, undefined, playerScreen, computerScreen);
+let battleShipGame = new Game(playerShipList, computerShipList, playerScreen, computerScreen, playerTurnIcon, computerTurnIcon);
 
+let gridSquare = document.getElementById("0-0");
+let egridSquare = document.getElementById("0-1");
+
+
+
+battleShipGame.addMarkToGridSquare(gridSquare, "x");
+battleShipGame.addMarkToGridSquare(egridSquare, "o");
 rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "rotate-button", shipSelectionButtonStyleList, "bg-red-500", () => {
     let shipSelectionScreenClassList = shipSelectionScreen.classList;
     if (shipSelectionScreenClassList.contains("flex-col") ) {
@@ -754,15 +888,21 @@ rotateButton = createButtonAndEventListener(shipSelectionButtonDiv, "rotate", "r
 
 startButton = createButtonAndEventListener(shipSelectionButtonDiv, "submit", "submit-button", shipSelectionButtonStyleList, "bg-blue-500", () => {
     if (playerShipList.checkShipOverlap()) {
+        let shipSelectionScreenClassList = shipSelectionScreen.classList;
+        if (shipSelectionScreenClassList.contains("flex-row") ) {
+            shipSelectionScreenClassList.remove("flex-row");
+            shipSelectionScreenClassList.add("flex-col");
+        }
         battleShipGame.start();
+        startButton.remove();
+        rotateButton.remove();
+        playerTurnIcon = createButtonAndEventListener(shipSelectionButtonDiv, "Player Turn", "player-turn-button", shipSelectionButtonStyleList, "bg-blue-500");
+        computerTurnIcon = createButtonAndEventListener(shipSelectionButtonDiv, "Computer Turn", "player-turn-button", shipSelectionButtonStyleList, "bg-red-500");
+        
     } else {
         alert('Ships are overlapping');
         playerShipList.reset();
-        let shipSelectionScreenClassList = shipSelectionScreen.classList;
-        if (shipSelectionScreenClassList.contains("flex-col") ) {
-            shipSelectionScreenClassList.remove("flex-col");
-            shipSelectionScreenClassList.add("flex-row");
-        }
+        
     }
 });
 
