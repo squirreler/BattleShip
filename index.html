@@ -5,15 +5,17 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="https://cdn.tailwindcss.com"></script>
         <script defer src="index.js"></script>
+        <script defer>
+          alert('Set browser window to full screen for the best experience');
+        </script>
     </head>
 
-    <body class="flex flex-col min-w-full min-h-full justify-center items-center gap-y-4 bg-emerald-100"> <!-- Change background color to complementary non white -->
+    <body class=" <!--overflow-hidden--> flex flex-col min-w-full min-h-full justify-center items-center gap-y-0 bg-emerald-100">
         <section class="flex gap-x-24 py-3 px-2 flex-wrap gap-y-3 justify-center items-center" id="game-screens">
-            <!-- Should be good enough to fit on mobile-->
 
         </section>
-        <main class="flex flex-row justify-center wrap min-w-full pt-2" id="game-info">
-            <section class="flex flex-col gap-y-2 items-center justify-center" id="ship-selection"> 
+        <main class="flex flex-row justify-center wrap min-w-full pt-1" id="game-info">
+            <section class="flex flex-col gap-y-2 items-center justify-center" id="ship-selection">
             </section>
         </main>
     </body>
