@@ -492,6 +492,22 @@ function shipFits(playerScreen, draggedShip) {
   console.log("screenTopY: " + screenTopY);
   console.log("draggedItemTopY: " + draggedShipTopY);
 }
+function getGridSquareElementFromParent(parent, gridCoords) {
+  if (gridCoords.length !== 3 || typeof parent === "undefined") {
+    alert('Improper attempt to get gridsquare element from parent');
+    return;
+  }
+
+  // Once again some horrible code, probably should have return a node list or iterated though the parents children but I kinda need to finish this...
+  let focusedElement = parent.firstElementChild;
+  for (let i = 0; i < 101; i++) {
+    if (gridCoords.charAt(0) === focusedElement.id.charAt(0) && gridCoords.charAt(2) === focusedElement.id.charAt(2)) {
+      return focusedElement;
+    }
+    focusedElement = focusedElement.nextElementSibling;
+    console.log(focusedElement);
+  }
+}
 
 document.addEventListener("pointermove", (event) => {
   if (draggedItem !== null && draggedItem.dragging === true) {
@@ -719,6 +735,7 @@ class Game {
     this.winner = null;
     this.messageTextClassList = [];
     this.state = "gameNotStarted"; // So I can easily trace where the logic is when bughunting
+    // gameNotStarted waitingForPlayerInput computerMove
     this.messageText = null;
     this.messageTextBelow = null;
   }
@@ -757,7 +774,7 @@ class Game {
         return;
       }
       console.log("---------------------------------------");
-      console.log("Player Attack Click");
+      console.log("Player Attack Click on ComputerGrid");
       let screenTopX = computerScreen.getBoundingClientRect().x;
       let screenTopY = computerScreen.getBoundingClientRect().y;
       console.log("Attack click event: " + event);
@@ -774,6 +791,7 @@ class Game {
         gridDisplacementDistanceY < 0
       ) {
         alert("Did not click on a valid grid square");
+        return;
       }
       console.log("gridDisplacementCoordX: " + gridDisplacementDistanceX);
       console.log("gridDisplacementCoordY: " + gridDisplacementDistanceY);
@@ -782,6 +800,33 @@ class Game {
       console.log("topGridSquareX: " + topGridSquareX);
       console.log("topGridSquareY: " + topGridSquareY);
       console.log("---------------------------------------");
+      if ((topGridSquareX <= 9 && topGridSquareX >= 0) && (topGridSquareY <= 9 && topGridSquareY >= 0)) {
+
+        //Some horrid code below here, to explain the if condition edits the ships health
+        // and if depending on if a ship gets hit it returns true or false
+        // Probably should add handeling if the square has already been clicked.
+        // Should add it in the addMark function with it tying back to this function.
+        let attackedGridSquare = document.getElementById(`${topGridSquareX}-${topGridSquareY}`);
+        if (this.computerShipList.registerHit()) {
+          this.addMarkToGridSquare(attackedGridSquare, "x");
+          if (this.computerShipList.isDestroyed()) {
+            this.winner = "You"
+            this.endGame();
+          }
+        } else {
+          this.addMarkToGridSquare(attackedGridSquare, "o");
+        }
+
+        this.state = "computerMove"
+        setTimeout(() => {
+          this.computerMove();
+          this.state = "waitingForPlayerInput"; // And thus the cycle begins again...
+        }, 2000)
+
+
+      }
+      //Register Hit Function
+      //
 
       // Take the x y coords, turn them into grid coords,  and pass them through player ship list,
       //if any of the grid coords match the ship grid cords, change the health status of the computer ship
@@ -795,6 +840,20 @@ class Game {
       // Tak
       console.log("ComputerGameScreenClickEvent: ", event);
     });
+  }
+  computerMove() {
+    //GridSquare Marking,
+    let attackX = this.playerShipList.getRandomInt(10); //Not referencing ship list for any specific reason other than to use the function
+    let attackY = this.playerShipList.getRandomInt(10);
+    if (this.playerShipList.registerHit()) {
+      this.addMarkToGridSquare(attackedGridSquare, "x");
+      if (this.computerShipList.isDestroyed()) {
+        this.winner = "You"
+        this.endGame();
+      }
+    } else {
+      this.addMarkToGridSquare(attackedGridSquare, "o");
+    }
   }
   createComputerMove() {
     // this.state = "waitingForComputerInput";
@@ -815,6 +874,11 @@ class Game {
       // Tak
       console.log("ComputerGameScreenClickEvent: ", event);
     });
+  }
+  endGame() {
+    playerScreen.removeEventListener("click");
+    computerScreen.removeEventListener("click");
+    alert(winner + "has won" + 'Game Over')
   }
 
   removeShipSelectionStuff() {
@@ -1114,11 +1178,7 @@ let battleShipGame = new Game(
   computerTurnIcon,
 );
 
-let gridSquare = document.getElementById("0-0");
-let egridSquare = document.getElementById("0-1");
 
-battleShipGame.addMarkToGridSquare(gridSquare, "x");
-battleShipGame.addMarkToGridSquare(egridSquare, "o");
 rotateButton = createButtonAndEventListener(
   shipSelectionButtonDiv,
   "rotate",
@@ -1203,3 +1263,4 @@ startButton = createButtonAndEventListener(
 // console.log(computerScreen.getBoundingClientRect());
 // console.dir(playerScreen);
 // console.dir(computerScreen);
+getGridSquareElementFromParent(document.getElementById("player-screen"), "10-10");
