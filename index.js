@@ -130,7 +130,7 @@ class ship {
       return;
     }
     let localArray = [];
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < this.length; i++) {
       localArray.push("o");
     }
     return localArray;
@@ -172,12 +172,13 @@ class ship {
   get styleList() {}
 
   get isDestroyed() {
-    for (sectionStatus of health) {
-      if (sectionStatus === "o") {
+    console.log(this.health)
+    for (let i = 0; i < this.health.length; i++) {
+      if (this.health[i] === "o") {
         return false;
       }
     }
-    return this.isDestroyed;
+    return true;
   }
   addEventListeners() {
     this.html.addEventListener("mousedown", (event) => {
@@ -498,14 +499,12 @@ function getGridSquareElementFromParent(parent, gridCoords) {
     return;
   }
 
-  // Once again some horrible code, probably should have return a node list or iterated though the parents children but I kinda need to finish this...
   let focusedElement = parent.firstElementChild;
   for (let i = 0; i < 101; i++) {
     if (gridCoords.charAt(0) === focusedElement.id.charAt(0) && gridCoords.charAt(2) === focusedElement.id.charAt(2)) {
       return focusedElement;
     }
     focusedElement = focusedElement.nextElementSibling;
-    console.log(focusedElement);
   }
 }
 
@@ -664,7 +663,7 @@ playerScreen = createScreen(
 computerScreen = createScreen(
   computerScreenSection,
   "outline-red-500",
-  "player-screen",
+  "computer-screen",
   screenStyleList,
 );
 let playerGridBackgroundColor = "bg-sky-500";
@@ -718,6 +717,8 @@ class Game {
   playerTurnIcon;
   computerTurnIcon;
 
+  computerGridAttackList;
+
   constructor(
     playerShipList,
     computerShipList,
@@ -738,6 +739,7 @@ class Game {
     // gameNotStarted waitingForPlayerInput computerMove
     this.messageText = null;
     this.messageTextBelow = null;
+    this.computerGridAttackList = [];
   }
   start() {
     alert("game started");
@@ -806,8 +808,11 @@ class Game {
         // and if depending on if a ship gets hit it returns true or false
         // Probably should add handeling if the square has already been clicked.
         // Should add it in the addMark function with it tying back to this function.
-        let attackedGridSquare = document.getElementById(`${topGridSquareX}-${topGridSquareY}`);
-        if (this.computerShipList.registerHit()) {
+        let attackedGridSquare = getGridSquareElementFromParent(computerScreen, `${topGridSquareY}-${topGridSquareX}`);
+        //Fun Fact: I just noticed... now that I am on the last minute task to get the game working, that my
+        //Ship coordinate system is y-x instead of x-y
+        console.log(attackedGridSquare);
+        if (this.computerShipList.registerHit(attackedGridSquare.id)) {
           this.addMarkToGridSquare(attackedGridSquare, "x");
           if (this.computerShipList.isDestroyed()) {
             this.winner = "You"
@@ -841,18 +846,38 @@ class Game {
       console.log("ComputerGameScreenClickEvent: ", event);
     });
   }
+  isRepeatAttack(attackY, attackX) {
+    let attackString = `${attackY}-${attackX}`
+    for (let i = 0; i < this.computerGridAttackList.length; i++) {
+      if (attackString === this.computerGridAttackList[i]) {
+        return true;
+      }
+    }
+    return false;
+  };
   computerMove() {
-    //GridSquare Marking,
     let attackX = this.playerShipList.getRandomInt(10); //Not referencing ship list for any specific reason other than to use the function
     let attackY = this.playerShipList.getRandomInt(10);
-    if (this.playerShipList.registerHit()) {
-      this.addMarkToGridSquare(attackedGridSquare, "x");
+    while (this.isRepeatAttack(attackY, attackX)) {
+      attackX = this.playerShipList.getRandomInt(10);
+      attackY = this.playerShipList.getRandomInt(10);
+    }
+    let attackGridCoords = `${attackY}-${attackX}`
+    this.computerGridAttackList.push(attackGridCoords)
+    console.log(this.computerGridAttackList);
+
+    //GridSquare Marking,
+
+
+    let atttackedGridSquare = getGridSquareElementFromParent(playerScreen, attackGridCoords);
+    if (this.playerShipList.registerHit(attackGridCoords)) {
+      this.addMarkToGridSquare(atttackedGridSquare, "x");
       if (this.computerShipList.isDestroyed()) {
         this.winner = "You"
         this.endGame();
       }
     } else {
-      this.addMarkToGridSquare(attackedGridSquare, "o");
+      this.addMarkToGridSquare(atttackedGridSquare, "o");
     }
   }
   createComputerMove() {
@@ -876,8 +901,6 @@ class Game {
     });
   }
   endGame() {
-    playerScreen.removeEventListener("click");
-    computerScreen.removeEventListener("click");
     alert(winner + "has won" + 'Game Over')
   }
 
@@ -1082,6 +1105,23 @@ class ShipList {
       previousStyleLists[3],
     );
   }
+  registerHit(gridCoords) {
+    for (let i = 0; i < this.length; i++) {
+      let shipReference = this.get(i);
+      console.log(shipReference);
+      console.log(shipReference.location)
+      console.log(gridCoords);
+      for (let j = 0; j < shipReference.length; j++) {
+
+          if (shipReference.location[j] === gridCoords) {
+            shipReference.health[j] = "x"
+            console.log("HIT");
+            return true;
+          }
+      }
+    }
+    return false;
+  }
   checkShipOverlap() {
     let coordList = [];
     for (let i = 0; i < this.length; i++) {
@@ -1146,6 +1186,15 @@ class ShipList {
     } else {
       return this.manuallyAssignCoords();
     }
+  }
+  isDestroyed() {
+    for (let i = 0; i < this.length; i++) {
+      console.log(this.get(i).isDestroyed)
+      if (!this.get(i).isDestroyed) {
+        return false;
+      }
+    }
+    return true;
   }
   printShipInfo() {
     console.log("----------");
@@ -1263,4 +1312,6 @@ startButton = createButtonAndEventListener(
 // console.log(computerScreen.getBoundingClientRect());
 // console.dir(playerScreen);
 // console.dir(computerScreen);
-getGridSquareElementFromParent(document.getElementById("player-screen"), "10-10");
+// console.log(getGridSquareElementFromParent(document.getElementById("player-screen"), "9-9"));
+// console.log(getGridSquareElementFromParent(document.getElementById("computer-screen"), "1-1"));
+// console.log(getGridSquareElementFromParent(document.getElementById("player-screen"), "0-0"));
