@@ -403,18 +403,19 @@ function calculateShipCoordsFromTopCoords(topX, topY, ship) {
   console.log("ship rotation: " + ship.rotation);
   let coordGrid = 0;
   let refreshCoordGrid = 0;
-
+  //--------------------------------------------------------------------------------------------------
+  //Pylon
   if (ship.rotation === "|") {
     incrementCoord = topY;
     staticCoord = topX;
     refreshCoordGrid = (incrementCoord, staticCoord) => {
-      return `${staticCoord}-${incrementCoord}`;
+      return `${incrementCoord}-${staticCoord}`;
     };
   } else {
     incrementCoord = topX;
     staticCoord = topY;
     refreshCoordGrid = (incrementCoord, staticCoord) => {
-      return `${incrementCoord}-${staticCoord}`;
+      return `${staticCoord}-${incrementCoord}`;
     };
   }
 
