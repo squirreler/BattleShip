@@ -743,13 +743,6 @@ class Game {
   }
   start() {
     alert("game started");
-    this.messageText = createAndAppendTextElement(
-      shipSelectionScreen,
-      "h1",
-      "Your Move: ",
-      "shipSelectionScreen",
-      this.messageTextClassList,
-    );
     this.messageTextBelow = createAndAppendTextElement(
       shipSelectionScreen,
       "h1",
@@ -759,7 +752,7 @@ class Game {
     );
     this.state = "gameStarted";
     if (this.computerShipList.manuallyAssignCoords() === true) {
-      alert("Computer ship list set");
+      alert("Game Started, Computer Shiplist Set");
     }
     this.playerShipList.printShipInfo();
     this.computerShipList.printShipInfo();
@@ -803,7 +796,6 @@ class Game {
       console.log("topGridSquareY: " + topGridSquareY);
       console.log("---------------------------------------");
       if ((topGridSquareX <= 9 && topGridSquareX >= 0) && (topGridSquareY <= 9 && topGridSquareY >= 0)) {
-
         //Some horrid code below here, to explain the if condition edits the ships health
         // and if depending on if a ship gets hit it returns true or false
         // Probably should add handeling if the square has already been clicked.
@@ -815,7 +807,7 @@ class Game {
         if (this.computerShipList.registerHit(attackedGridSquare.id)) {
           this.addMarkToGridSquare(attackedGridSquare, "x");
           if (this.computerShipList.isDestroyed()) {
-            this.winner = "You"
+            this.winner = "You have"
             this.endGame();
           }
         } else {
@@ -826,23 +818,10 @@ class Game {
         setTimeout(() => {
           this.computerMove();
           this.state = "waitingForPlayerInput"; // And thus the cycle begins again...
-        }, 2000)
+        }, 1000)
 
 
       }
-      //Register Hit Function
-      //
-
-      // Take the x y coords, turn them into grid coords,  and pass them through player ship list,
-      //if any of the grid coords match the ship grid cords, change the health status of the computer ship
-      //In the same scope turn the grid cords into an id and use it to identify and change the styling of the
-      //grid coord square thing so it is white if no ship, or has a red x with an elevated z axis if hit
-
-      //Need a function to pass x and y coords as an attack and have the damage be done
-      //There needs to be a isDead function in shiplist to check if all ships have been decimated.
-      //Then i'm basically done, I need to make sure my homework is in order first
-
-      // Tak
       console.log("ComputerGameScreenClickEvent: ", event);
     });
   }
@@ -862,46 +841,26 @@ class Game {
       attackX = this.playerShipList.getRandomInt(10);
       attackY = this.playerShipList.getRandomInt(10);
     }
-    let attackGridCoords = `${attackY}-${attackX}`
-    this.computerGridAttackList.push(attackGridCoords)
+    let attackedGridSquare = getGridSquareElementFromParent(playerScreen, `${attackY}-${attackX}`);
+    console.log(attackedGridSquare);
+    console.log(attackedGridSquare.id);
+    this.computerGridAttackList.push(attackedGridSquare.id)
     console.log(this.computerGridAttackList);
 
-    //GridSquare Marking,
-
-
-    let atttackedGridSquare = getGridSquareElementFromParent(playerScreen, attackGridCoords);
-    if (this.playerShipList.registerHit(attackGridCoords)) {
-      this.addMarkToGridSquare(atttackedGridSquare, "x");
-      if (this.computerShipList.isDestroyed()) {
-        this.winner = "You"
+    if (this.playerShipList.registerHit(attackedGridSquare.id)) {
+      this.addMarkToGridSquare(attackedGridSquare, "x");
+      if (this.playerShipList.isDestroyed()) {
+        this.winner = "The Computer has"
         this.endGame();
       }
     } else {
-      this.addMarkToGridSquare(atttackedGridSquare, "o");
+      this.addMarkToGridSquare(attackedGridSquare, "o");
     }
   }
-  createComputerMove() {
-    // this.state = "waitingForComputerInput";
-    playerScreen.addEventListener("click", (event) => {
-      if (this.state !== "waitingForPlayerInput") {
-        return;
-      }
 
-      //Generate coords at random, within the bounds of grid coords, and pass them through the player ship list,
-      //if any of the grid coords match the ship grid cords, change the health status of the player ship
-      // Take the x y coords, turn them into grid coords,  and pass them through player ship list,
-      //In the same scope turn the grid cords into an id and use it to identify and change the styling of the
-      //grid coord square thing so it is white if no ship, or has a red x with an elevated z axis if hit
-      //Check for player death using shiplist method, set this winner uppon death
 
-      //
-
-      // Tak
-      console.log("ComputerGameScreenClickEvent: ", event);
-    });
-  }
   endGame() {
-    alert(winner + "has won" + 'Game Over')
+    alert(this.winner + " won" + 'Game Over')
   }
 
   removeShipSelectionStuff() {
@@ -1265,14 +1224,14 @@ startButton = createButtonAndEventListener(
       rotateButton.remove();
       playerTurnIcon = createButtonAndEventListener(
         shipSelectionButtonDiv,
-        "Player Turn",
+        "Player",
         "player-turn-button",
         shipSelectionButtonStyleList,
         "bg-blue-500",
       );
       computerTurnIcon = createButtonAndEventListener(
         shipSelectionButtonDiv,
-        "Computer Turn",
+        "Computer",
         "player-turn-button",
         shipSelectionButtonStyleList,
         "bg-red-500",
